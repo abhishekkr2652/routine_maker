@@ -1,0 +1,12 @@
+const mongoose = require('mongoose');
+
+const subjectSchema = new mongoose.Schema({
+  name: { type: String, required: true },
+  code: { type: String, required: true, unique: true }, // e.g., "CS101"
+  abbreviation: { type: String, required: true }, // e.g., "MOOC-1"
+  type: { type: String, enum: ['Theory', 'Lab'], required: true },
+  credit: { type: Number, required: true },
+  createdAt: { type: Date, default: Date.now }
+});
+
+module.exports = mongoose.model('Subject', subjectSchema);
