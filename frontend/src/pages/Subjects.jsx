@@ -7,6 +7,8 @@ export default function Subjects() {
   const [name, setName] = useState('');
   const [code, setCode] = useState('');
   const [abbreviation, setAbbreviation] = useState('');
+  const [department, setDepartment] = useState('');
+  const [semester, setSemester] = useState('');
   const [type, setType] = useState('Theory');
   const [credit, setCredit] = useState('');
   const [color, setColor] = useState('#E2E8F0');
@@ -29,14 +31,16 @@ export default function Subjects() {
     e.preventDefault();
     try {
       if (editingId) {
-        await api.put(`/subjects/${editingId}`, { name, code, abbreviation, type, credit: Number(credit), color });
+        await api.put(`/subjects/${editingId}`, { name, code, abbreviation, department, semester: Number(semester), type, credit: Number(credit), color });
         setEditingId(null);
       } else {
-        await api.post('/subjects', { name, code, abbreviation, type, credit: Number(credit), color });
+        await api.post('/subjects', { name, code, abbreviation, department, semester: Number(semester), type, credit: Number(credit), color });
       }
       setName('');
       setCode('');
       setAbbreviation('');
+      setDepartment('');
+      setSemester('');
       setType('Theory');
       setCredit('');
       setColor('#E2E8F0');
@@ -51,6 +55,8 @@ export default function Subjects() {
     setName(subject.name);
     setCode(subject.code);
     setAbbreviation(subject.abbreviation);
+    setDepartment(subject.department || '');
+    setSemester(subject.semester || '');
     setType(subject.type);
     setCredit(subject.credit);
     setColor(subject.color || '#E2E8F0');
@@ -61,6 +67,8 @@ export default function Subjects() {
     setName('');
     setCode('');
     setAbbreviation('');
+    setDepartment('');
+    setSemester('');
     setType('Theory');
     setCredit('');
     setColor('#E2E8F0');
@@ -98,6 +106,12 @@ export default function Subjects() {
           <div className="form-group" style={{ marginBottom: 0, flex: 1, minWidth: '100px' }}>
             <input type="text" placeholder="Abbrev (e.g. MOOC-1)" value={abbreviation} onChange={e => setAbbreviation(e.target.value)} required />
           </div>
+          <div className="form-group" style={{ marginBottom: 0, flex: 1, minWidth: '100px' }}>
+            <input type="text" placeholder="Department" value={department} onChange={e => setDepartment(e.target.value)} required />
+          </div>
+          <div className="form-group" style={{ marginBottom: 0, flex: 1, minWidth: '80px' }}>
+            <input type="number" placeholder="Semester" value={semester} onChange={e => setSemester(e.target.value)} required />
+          </div>
           <div className="form-group" style={{ marginBottom: 0, flex: 1, minWidth: '80px' }}>
             <input type="number" placeholder="Credit" value={credit} onChange={e => setCredit(e.target.value)} required />
           </div>
@@ -124,6 +138,8 @@ export default function Subjects() {
                 <th>Subject Name</th>
                 <th>Code</th>
                 <th>Abbreviation</th>
+                <th>Dept</th>
+                <th>Sem</th>
                 <th>Type</th>
                 <th>Credit</th>
                 <th>Color</th>
@@ -136,6 +152,8 @@ export default function Subjects() {
                   <td>{subject.name}</td>
                   <td>{subject.code}</td>
                   <td>{subject.abbreviation}</td>
+                  <td>{subject.department || '-'}</td>
+                  <td>{subject.semester || '-'}</td>
                   <td>{subject.type}</td>
                   <td>{subject.credit}</td>
                   <td>

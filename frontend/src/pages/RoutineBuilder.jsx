@@ -25,8 +25,13 @@ export default function RoutineBuilder() {
   const [currentSlot, setCurrentSlot] = useState(null);
   const [exportWithColors, setExportWithColors] = useState(true);
   
-  const [formData, setFormData] = useState({ subjectId: '', facultyId: '', room: '' });
+  const [formData, setFormData] = useState({ department: '', subjectId: '', facultyId: '', room: '' });
   const [isDirty, setIsDirty] = useState(false);
+
+  const currentBatch = batches.find(b => b._id === selectedBatch);
+  const roomOptions = currentBatch?.room 
+    ? currentBatch.room.split(',').map(r => r.trim()).filter(r => r) 
+    : [];
 
   useEffect(() => {
     fetchData();
@@ -96,7 +101,7 @@ export default function RoutineBuilder() {
 
   const openModal = (day, timeSlot) => {
     setCurrentSlot({ day, timeSlot });
-    setFormData({ subjectId: '', facultyId: '', room: '' });
+    setFormData({ department: '', subjectId: '', facultyId: '', room: '' });
     setShowModal(true);
   };
 
@@ -459,6 +464,12 @@ export default function RoutineBuilder() {
     URL.revokeObjectURL(url);
   };
 
+  const availableDepartments = [...new Set(subjects.map(s => s.department).filter(Boolean))].sort();
+  const filteredSubjects = subjects.filter(s => 
+    s.department === formData.department && 
+    Number(s.semester) === Number(currentBatch?.semester)
+  );
+
   return (
     <div>
       <div className="page-header">
@@ -550,10 +561,17 @@ export default function RoutineBuilder() {
             </div>
             <form onSubmit={handleAddSlot}>
               <div className="form-group">
+                <label>Department</label>
+                <select value={formData.department} onChange={e => setFormData({...formData, department: e.target.value, subjectId: ''})} required>
+                  <option value="">Select Department</option>
+                  {availableDepartments.map(d => <option key={d} value={d}>{d}</option>)}
+                </select>
+              </div>
+              <div className="form-group">
                 <label>Subject</label>
-                <select value={formData.subjectId} onChange={e => setFormData({...formData, subjectId: e.target.value})} required>
+                <select value={formData.subjectId} onChange={e => setFormData({...formData, subjectId: e.target.value})} required disabled={!formData.department}>
                   <option value="">Select Subject</option>
-                  {subjects.map(s => <option key={s._id} value={s._id}>{s.name} ({s.code})</option>)}
+                  {filteredSubjects.map(s => <option key={s._id} value={s._id}>{s.name} ({s.code})</option>)}
                 </select>
               </div>
               <div className="form-group">
@@ -565,7 +583,14 @@ export default function RoutineBuilder() {
               </div>
               <div className="form-group">
                 <label>Room Number</label>
-                <input type="text" value={formData.room} onChange={e => setFormData({...formData, room: e.target.value})} required placeholder="e.g. 101, Lab A" />
+                {roomOptions.length > 0 ? (
+                  <select value={formData.room} onChange={e => setFormData({...formData, room: e.target.value})} required>
+                    <option value="">Select Room</option>
+                    {roomOptions.map((r, idx) => <option key={idx} value={r}>{r}</option>)}
+                  </select>
+                ) : (
+                  <input type="text" value={formData.room} onChange={e => setFormData({...formData, room: e.target.value})} required placeholder="e.g. 101, Lab A" />
+                )}
               </div>
               <div className="flex gap-2 justify-end mt-6">
                 <button type="button" className="btn btn-secondary" onClick={() => setShowModal(false)}>Cancel</button>

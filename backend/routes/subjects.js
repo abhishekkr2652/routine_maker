@@ -18,6 +18,8 @@ router.post('/', async (req, res) => {
     name: req.body.name,
     code: req.body.code,
     abbreviation: req.body.abbreviation,
+    department: req.body.department,
+    semester: req.body.semester,
     type: req.body.type,
     credit: req.body.credit,
     color: req.body.color
@@ -49,6 +51,8 @@ router.put('/:id', async (req, res) => {
         name: req.body.name,
         code: req.body.code,
         abbreviation: req.body.abbreviation,
+        department: req.body.department,
+        semester: req.body.semester,
         type: req.body.type,
         credit: req.body.credit,
         color: req.body.color

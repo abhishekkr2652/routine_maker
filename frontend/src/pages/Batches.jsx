@@ -84,7 +84,7 @@ export default function Batches() {
             <input type="number" placeholder="Semester" value={semester} onChange={e => setSemester(e.target.value)} required />
           </div>
           <div className="form-group" style={{ marginBottom: 0, flex: 1 }}>
-            <input type="text" placeholder="Room No (e.g. Room 101)" value={room} onChange={e => setRoom(e.target.value)} />
+            <input type="text" placeholder="Rooms (comma separated, e.g. 101, 102)" value={room} onChange={e => setRoom(e.target.value)} />
           </div>
           <button type="submit" className="btn btn-primary">
             {editingId ? 'Update Batch' : <><Plus size={18} /> Add Batch</>}
@@ -99,7 +99,7 @@ export default function Batches() {
               <tr>
                 <th>Batch Name</th>
                 <th>Semester</th>
-                <th>Room No</th>
+                <th>Rooms</th>
                 <th>Actions</th>
               </tr>
             </thead>
