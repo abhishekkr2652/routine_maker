@@ -16,7 +16,7 @@ mongoose.connect(process.env.MONGODB_URI).then(() => {
   console.error('Error connecting to MongoDB', err);
 });
 
-// Routes
+app.use('/api/auth', require('./routes/auth'));
 app.use('/api/batches', require('./routes/batches'));
 app.use('/api/faculties', require('./routes/faculties'));
 app.use('/api/subjects', require('./routes/subjects'));

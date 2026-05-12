@@ -4,7 +4,7 @@ const subjectSchema = new mongoose.Schema({
   name: { type: String, required: true },
   code: { type: String, required: true, unique: true }, // e.g., "CS101"
   abbreviation: { type: String, required: true }, // e.g., "MOOC-1"
-  department: { type: String },
+  department: { type: String, required: true },
   semester: { type: Number },
   type: { type: String, enum: ['Theory', 'Lab'], required: true },
   credit: { type: Number, required: true },

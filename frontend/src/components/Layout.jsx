@@ -5,6 +5,7 @@ import { useState, useEffect } from 'react';
 export default function Layout() {
   const location = useLocation();
   const [theme, setTheme] = useState(localStorage.getItem('theme') || 'dark');
+  const role = localStorage.getItem('role') || 'department';
 
   useEffect(() => {
     if (theme === 'light') {
@@ -17,6 +18,14 @@ export default function Layout() {
 
   const toggleTheme = () => {
     setTheme(prev => prev === 'dark' ? 'light' : 'dark');
+  };
+
+  const handleLogout = () => {
+    localStorage.removeItem('token');
+    localStorage.removeItem('department');
+    localStorage.removeItem('username');
+    localStorage.removeItem('role');
+    window.dispatchEvent(new Event('auth-change'));
   };
 
   const isActive = (path) => location.pathname === path ? 'active' : '';
@@ -42,26 +51,41 @@ export default function Layout() {
           <Link to="/" className={`nav-item ${isActive('/')}`}>
             <Home size={20} /> Dashboard
           </Link>
-          <Link to="/batches" className={`nav-item ${isActive('/batches')}`}>
-            <Users size={20} /> Batches
-          </Link>
-          <Link to="/faculties" className={`nav-item ${isActive('/faculties')}`}>
-            <UserCircle size={20} /> Faculties
-          </Link>
-          <Link to="/subjects" className={`nav-item ${isActive('/subjects')}`}>
-            <BookOpen size={20} /> Subjects
-          </Link>
-          <Link to="/routine-builder" className={`nav-item ${isActive('/routine-builder')}`}>
-            <Calendar size={20} /> Routine Builder
-          </Link>
-          <Link to="/faculty-routine" className={`nav-item ${isActive('/faculty-routine')}`}>
-            <UserCircle size={20} /> Faculty Timetable
-          </Link>
+          
+          {role === 'main_admin' ? (
+            <>
+              <Link to="/faculties" className={`nav-item ${isActive('/faculties')}`}>
+                <UserCircle size={20} /> Manage Faculties
+              </Link>
+              <Link to="/subjects" className={`nav-item ${isActive('/subjects')}`}>
+                <BookOpen size={20} /> Manage Subjects
+              </Link>
+            </>
+          ) : (
+            <>
+              <Link to="/batches" className={`nav-item ${isActive('/batches')}`}>
+                <Users size={20} /> Batches
+              </Link>
+              <Link to="/routine-builder" className={`nav-item ${isActive('/routine-builder')}`}>
+                <Calendar size={20} /> Routine Builder
+              </Link>
+              <Link to="/faculty-routine" className={`nav-item ${isActive('/faculty-routine')}`}>
+                <UserCircle size={20} /> Faculty Timetable
+              </Link>
+            </>
+          )}
         </nav>
 
-        <div style={{ marginTop: 'auto', paddingTop: '2rem' }}>
+        <div style={{ marginTop: 'auto', paddingTop: '2rem', display: 'flex', flexDirection: 'column', gap: '0.5rem' }}>
+          <div style={{ padding: '0.5rem 1rem', backgroundColor: 'var(--surface-hover)', borderRadius: '8px', fontSize: '0.9rem' }}>
+            <div style={{ color: 'var(--text-muted)' }}>{role === 'main_admin' ? 'Role' : 'Department'}</div>
+            <div style={{ fontWeight: 'bold', color: 'var(--text-main)' }}>{localStorage.getItem('department')}</div>
+          </div>
           <button className="btn btn-secondary" style={{ width: '100%', justifyContent: 'flex-start', paddingLeft: '1rem' }} onClick={toggleTheme}>
             {theme === 'dark' ? '☀️ Light Mode' : '🌙 Dark Mode'}
+          </button>
+          <button className="btn btn-secondary" style={{ width: '100%', justifyContent: 'flex-start', paddingLeft: '1rem', color: '#ef4444' }} onClick={handleLogout}>
+            Logout
           </button>
         </div>
       </aside>

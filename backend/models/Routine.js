@@ -6,6 +6,7 @@ const routineSchema = new mongoose.Schema({
   timeSlot: { type: String, required: true }, // e.g., "08:00 AM - 09:00 AM"
   subjectId: { type: mongoose.Schema.Types.ObjectId, ref: 'Subject', required: true },
   facultyId: { type: mongoose.Schema.Types.ObjectId, ref: 'Faculty', required: true },
+  department: { type: String, required: true },
   room: { type: String, required: true },
   createdAt: { type: Date, default: Date.now }
 });

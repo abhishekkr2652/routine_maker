@@ -1,9 +1,11 @@
 const express = require('express');
 const router = express.Router();
 const Faculty = require('../models/Faculty');
+const auth = require('../middleware/auth');
+const adminAuth = require('../middleware/adminAuth');
 
 // Get all faculties
-router.get('/', async (req, res) => {
+router.get('/', auth, async (req, res) => {
   try {
     const faculties = await Faculty.find().sort({ name: 1 });
     res.json(faculties);
@@ -13,7 +15,7 @@ router.get('/', async (req, res) => {
 });
 
 // Create a faculty
-router.post('/', async (req, res) => {
+router.post('/', adminAuth, async (req, res) => {
   const faculty = new Faculty({
     name: req.body.name,
     department: req.body.department,
@@ -28,7 +30,7 @@ router.post('/', async (req, res) => {
 });
 
 // Delete a faculty
-router.delete('/:id', async (req, res) => {
+router.delete('/:id', adminAuth, async (req, res) => {
   try {
     await Faculty.findByIdAndDelete(req.params.id);
     res.json({ message: 'Faculty deleted' });
@@ -38,7 +40,7 @@ router.delete('/:id', async (req, res) => {
 });
 
 // Update a faculty
-router.put('/:id', async (req, res) => {
+router.put('/:id', adminAuth, async (req, res) => {
   try {
     const updatedFaculty = await Faculty.findByIdAndUpdate(
       req.params.id,

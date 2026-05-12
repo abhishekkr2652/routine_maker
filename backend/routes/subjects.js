@@ -1,9 +1,11 @@
 const express = require('express');
 const router = express.Router();
 const Subject = require('../models/Subject');
+const auth = require('../middleware/auth');
+const adminAuth = require('../middleware/adminAuth');
 
 // Get all subjects
-router.get('/', async (req, res) => {
+router.get('/', auth, async (req, res) => {
   try {
     const subjects = await Subject.find().sort({ name: 1 });
     res.json(subjects);
@@ -13,7 +15,7 @@ router.get('/', async (req, res) => {
 });
 
 // Create a subject
-router.post('/', async (req, res) => {
+router.post('/', adminAuth, async (req, res) => {
   const subject = new Subject({
     name: req.body.name,
     code: req.body.code,
@@ -33,7 +35,7 @@ router.post('/', async (req, res) => {
 });
 
 // Delete a subject
-router.delete('/:id', async (req, res) => {
+router.delete('/:id', adminAuth, async (req, res) => {
   try {
     await Subject.findByIdAndDelete(req.params.id);
     res.json({ message: 'Subject deleted' });
@@ -43,7 +45,7 @@ router.delete('/:id', async (req, res) => {
 });
 
 // Update a subject
-router.put('/:id', async (req, res) => {
+router.put('/:id', adminAuth, async (req, res) => {
   try {
     const updatedSubject = await Subject.findByIdAndUpdate(
       req.params.id,
