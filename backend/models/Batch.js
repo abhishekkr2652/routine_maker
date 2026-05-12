@@ -3,6 +3,7 @@ const mongoose = require('mongoose');
 const batchSchema = new mongoose.Schema({
   name: { type: String, required: true, unique: true }, // e.g., "B.Tech CSE 2024"
   semester: { type: Number, required: true },
+  room: { type: String, default: '' },
   createdAt: { type: Date, default: Date.now }
 });
 

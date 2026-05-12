@@ -16,7 +16,8 @@ router.get('/', async (req, res) => {
 router.post('/', async (req, res) => {
   const batch = new Batch({
     name: req.body.name,
-    semester: req.body.semester
+    semester: req.body.semester,
+    room: req.body.room
   });
   try {
     const newBatch = await batch.save();
@@ -41,7 +42,7 @@ router.put('/:id', async (req, res) => {
   try {
     const updatedBatch = await Batch.findByIdAndUpdate(
       req.params.id,
-      { name: req.body.name, semester: req.body.semester },
+      { name: req.body.name, semester: req.body.semester, room: req.body.room },
       { returnDocument: 'after' }
     );
     res.json(updatedBatch);

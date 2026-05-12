@@ -9,6 +9,7 @@ export default function Subjects() {
   const [abbreviation, setAbbreviation] = useState('');
   const [type, setType] = useState('Theory');
   const [credit, setCredit] = useState('');
+  const [color, setColor] = useState('#E2E8F0');
   const [editingId, setEditingId] = useState(null);
 
   useEffect(() => {
@@ -28,16 +29,17 @@ export default function Subjects() {
     e.preventDefault();
     try {
       if (editingId) {
-        await api.put(`/subjects/${editingId}`, { name, code, abbreviation, type, credit: Number(credit) });
+        await api.put(`/subjects/${editingId}`, { name, code, abbreviation, type, credit: Number(credit), color });
         setEditingId(null);
       } else {
-        await api.post('/subjects', { name, code, abbreviation, type, credit: Number(credit) });
+        await api.post('/subjects', { name, code, abbreviation, type, credit: Number(credit), color });
       }
       setName('');
       setCode('');
       setAbbreviation('');
       setType('Theory');
       setCredit('');
+      setColor('#E2E8F0');
       fetchSubjects();
     } catch (err) {
       alert(editingId ? 'Error updating subject' : 'Error adding subject');
@@ -51,6 +53,7 @@ export default function Subjects() {
     setAbbreviation(subject.abbreviation);
     setType(subject.type);
     setCredit(subject.credit);
+    setColor(subject.color || '#E2E8F0');
   };
 
   const cancelEdit = () => {
@@ -60,6 +63,7 @@ export default function Subjects() {
     setAbbreviation('');
     setType('Theory');
     setCredit('');
+    setColor('#E2E8F0');
   };
 
   const handleDelete = async (id) => {
@@ -103,6 +107,9 @@ export default function Subjects() {
               <option value="Lab">Lab</option>
             </select>
           </div>
+          <div className="form-group" style={{ marginBottom: 0, flex: 0, minWidth: '50px' }}>
+            <input type="color" value={color} onChange={e => setColor(e.target.value)} style={{ padding: '0.2rem', height: '100%', cursor: 'pointer' }} title="Highlight Color" />
+          </div>
           <button type="submit" className="btn btn-primary whitespace-nowrap">
             {editingId ? 'Update Subject' : <><Plus size={18} /> Add Subject</>}
           </button>
@@ -119,6 +126,7 @@ export default function Subjects() {
                 <th>Abbreviation</th>
                 <th>Type</th>
                 <th>Credit</th>
+                <th>Color</th>
                 <th>Actions</th>
               </tr>
             </thead>
@@ -130,6 +138,9 @@ export default function Subjects() {
                   <td>{subject.abbreviation}</td>
                   <td>{subject.type}</td>
                   <td>{subject.credit}</td>
+                  <td>
+                    <div style={{ width: '24px', height: '24px', borderRadius: '4px', backgroundColor: subject.color || '#E2E8F0', border: '1px solid var(--border)' }}></div>
+                  </td>
                   <td>
                     <div className="flex gap-2">
                       <button className="action-btn" onClick={() => startEdit(subject)} style={{ color: 'var(--text-muted)' }}><Pencil size={18} /></button>

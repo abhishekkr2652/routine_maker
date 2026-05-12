@@ -6,6 +6,7 @@ const subjectSchema = new mongoose.Schema({
   abbreviation: { type: String, required: true }, // e.g., "MOOC-1"
   type: { type: String, enum: ['Theory', 'Lab'], required: true },
   credit: { type: Number, required: true },
+  color: { type: String, default: '#E2E8F0' },
   createdAt: { type: Date, default: Date.now }
 });
 

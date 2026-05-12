@@ -22,7 +22,8 @@ export default function RoutineBuilder() {
   const [history, setHistory] = useState([]); // Array of routine states for Undo
   
   const [showModal, setShowModal] = useState(false);
-  const [currentSlot, setCurrentSlot] = useState(null); // { day, timeSlot }
+  const [currentSlot, setCurrentSlot] = useState(null);
+  const [exportWithColors, setExportWithColors] = useState(true);
   
   const [formData, setFormData] = useState({ subjectId: '', facultyId: '', room: '' });
   const [isDirty, setIsDirty] = useState(false);
@@ -210,6 +211,12 @@ export default function RoutineBuilder() {
     }
   };
 
+  const hexToRgb = (hex) => {
+    if (!hex) return null;
+    const result = /^#?([a-f\d]{2})([a-f\d]{2})([a-f\d]{2})$/i.exec(hex);
+    return result ? [parseInt(result[1], 16), parseInt(result[2], 16), parseInt(result[3], 16)] : null;
+  };
+
   const exportPDF = async () => {
     const doc = new jsPDF({ orientation: 'landscape', format: 'a3' });
     const batch = batches.find(b => b._id === selectedBatch);
@@ -238,10 +245,8 @@ export default function RoutineBuilder() {
     doc.setFont("helvetica", "bold");
     doc.text(`Time Table of ${batchName}`, doc.internal.pageSize.width / 2, 50, { align: 'center' });
     
-    if (batch?.semester === 8 || batch?.semester === '8') {
-      doc.setFontSize(12);
-      doc.text("Room Number: Online", doc.internal.pageSize.width - 14, 60, { align: 'right' });
-    }
+    doc.setFontSize(12);
+    doc.text(`Room Number: ${batch?.room || '-'}`, doc.internal.pageSize.width - 14, 60, { align: 'right' });
 
     const tableData = [];
     DAYS.forEach(day => {
@@ -249,7 +254,14 @@ export default function RoutineBuilder() {
       TIME_SLOTS.forEach(time => {
         const cell = routine[`${day}|${time}`];
         if (cell) {
-          row.push(cell.subjectDetails?.abbreviation || cell.subjectDetails?.code);
+          const content = cell.subjectDetails?.abbreviation || cell.subjectDetails?.code;
+          const colorHex = cell.subjectDetails?.color;
+          if (exportWithColors && colorHex) {
+             const rgb = hexToRgb(colorHex);
+             row.push(rgb ? { content, styles: { fillColor: rgb } } : content);
+          } else {
+             row.push(content);
+          }
         } else {
           row.push('');
         }
@@ -301,7 +313,6 @@ export default function RoutineBuilder() {
   const exportWord = async () => {
     const batch = batches.find(b => b._id === selectedBatch);
     const batchName = batch?.name || 'Routine';
-    const isOnline = batch?.semester === 8 || batch?.semester === '8';
 
     const cellPadding = { top: 100, bottom: 100, left: 100, right: 100 };
     const headerShading = { fill: "E6D0B8", type: ShadingType.CLEAR, color: "auto" };
@@ -321,7 +332,18 @@ export default function RoutineBuilder() {
       TIME_SLOTS.forEach(time => {
         const cell = routine[`${day}|${time}`];
         const cellText = cell ? (cell.subjectDetails?.abbreviation || cell.subjectDetails?.code) : "";
-        cells.push(new TableCell({ children: [new Paragraph({ text: cellText, alignment: AlignmentType.CENTER })], margins: cellPadding }));
+        const colorHex = cell?.subjectDetails?.color;
+        
+        let shadingProps = undefined;
+        if (exportWithColors && colorHex && cellText) {
+          shadingProps = { fill: colorHex.replace('#', ''), type: ShadingType.CLEAR, color: "auto" };
+        }
+        
+        cells.push(new TableCell({ 
+          children: [new Paragraph({ text: cellText, alignment: AlignmentType.CENTER })], 
+          margins: cellPadding,
+          shading: shadingProps
+        }));
       });
       tableRows.push(new TableRow({ children: cells }));
     });
@@ -418,7 +440,7 @@ export default function RoutineBuilder() {
         children: [
           headerTable,
           new Paragraph({ text: "" }),
-          ...(isOnline ? [new Paragraph({ children: [new TextRun({ text: "Room Number: Online", bold: true, size: 24 })], alignment: AlignmentType.RIGHT })] : []),
+          new Paragraph({ children: [new TextRun({ text: `Room Number: ${batch?.room || '-'}`, bold: true, size: 24 })], alignment: AlignmentType.RIGHT }),
           new Paragraph({ text: "" }),
           new Table({ rows: tableRows, width: { size: 100, type: WidthType.PERCENTAGE } }),
           new Paragraph({ text: "" }),
@@ -450,7 +472,11 @@ export default function RoutineBuilder() {
             {batches.map(b => <option key={b._id} value={b._id}>{b.name}</option>)}
           </select>
         </div>
-        <div className="flex gap-2">
+        <div className="flex gap-2 items-center">
+          <label className="text-sm font-medium flex items-center gap-2 cursor-pointer mr-4">
+            <input type="checkbox" checked={exportWithColors} onChange={(e) => setExportWithColors(e.target.checked)} />
+            Export Colors
+          </label>
           <button className="btn btn-secondary" onClick={handleUndo} disabled={history.length === 0}>
             <Undo size={18} /> Undo
           </button>
@@ -486,11 +512,12 @@ export default function RoutineBuilder() {
                 const key = `${day}|${time}`;
                 const cellData = routine[key];
 
+                const color = cellData?.subjectDetails?.color || '#2B3A67';
                 return (
                   <div key={time} className="grid-cell">
                     {cellData ? (
-                      <div className="routine-card">
-                        <div className="font-semibold">{cellData.subjectDetails?.code}</div>
+                      <div className="routine-card" style={{ backgroundColor: `${color}20`, borderLeft: `4px solid ${color}`, borderColor: color }}>
+                        <div className="font-semibold" style={{ color: color }}>{cellData.subjectDetails?.code}</div>
                         <div className="text-xs text-muted">{cellData.facultyDetails?.name} | Room {cellData.room}</div>
                         <div className="routine-card-actions">
                           <button className="action-btn" onClick={() => handleRemoveSlot(day, time)}><Trash2 size={14} /></button>

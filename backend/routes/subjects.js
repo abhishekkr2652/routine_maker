@@ -19,7 +19,8 @@ router.post('/', async (req, res) => {
     code: req.body.code,
     abbreviation: req.body.abbreviation,
     type: req.body.type,
-    credit: req.body.credit
+    credit: req.body.credit,
+    color: req.body.color
   });
   try {
     const newSubject = await subject.save();
@@ -49,7 +50,8 @@ router.put('/:id', async (req, res) => {
         code: req.body.code,
         abbreviation: req.body.abbreviation,
         type: req.body.type,
-        credit: req.body.credit
+        credit: req.body.credit,
+        color: req.body.color
       },
       { returnDocument: 'after' }
     );

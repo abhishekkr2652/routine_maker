@@ -15,6 +15,7 @@ export default function FacultyRoutine() {
   const [faculties, setFaculties] = useState([]);
   const [selectedFaculty, setSelectedFaculty] = useState('');
   const [routine, setRoutine] = useState({});
+  const [exportWithColors, setExportWithColors] = useState(true);
 
   useEffect(() => {
     fetchFaculties();
@@ -81,6 +82,12 @@ export default function FacultyRoutine() {
     }
   };
 
+  const hexToRgb = (hex) => {
+    if (!hex) return null;
+    const result = /^#?([a-f\d]{2})([a-f\d]{2})([a-f\d]{2})$/i.exec(hex);
+    return result ? [parseInt(result[1], 16), parseInt(result[2], 16), parseInt(result[3], 16)] : null;
+  };
+
   const exportPDF = async () => {
     const doc = new jsPDF({ orientation: 'landscape', format: 'a3' });
     const faculty = faculties.find(f => f._id === selectedFaculty);
@@ -112,7 +119,14 @@ export default function FacultyRoutine() {
       TIME_SLOTS.forEach(time => {
         const cell = routine[`${day}|${time}`];
         if (cell) {
-          row.push(cell.subjectDetails?.abbreviation || cell.subjectDetails?.code);
+          const content = cell.subjectDetails?.abbreviation || cell.subjectDetails?.code;
+          const colorHex = cell.subjectDetails?.color;
+          if (exportWithColors && colorHex) {
+             const rgb = hexToRgb(colorHex);
+             row.push(rgb ? { content, styles: { fillColor: rgb } } : content);
+          } else {
+             row.push(content);
+          }
         } else {
           row.push('');
         }
@@ -135,16 +149,24 @@ export default function FacultyRoutine() {
     const uniqueClasses = {};
     Object.values(routine).forEach(cell => {
       if (cell && cell.subjectDetails && cell.batchDetails) {
-        uniqueClasses[`${cell.subjectDetails._id}-${cell.batchDetails._id}`] = cell;
+        const key = cell.subjectDetails._id;
+        if (!uniqueClasses[key]) {
+          uniqueClasses[key] = {
+            subjectDetails: cell.subjectDetails,
+            batches: new Set([cell.batchDetails?.name])
+          };
+        } else {
+          uniqueClasses[key].batches.add(cell.batchDetails?.name);
+        }
       }
     });
 
-    const bottomTableData = Object.values(uniqueClasses).map(cell => [
-      cell.subjectDetails?.code,
-      cell.subjectDetails?.abbreviation,
-      cell.subjectDetails?.name,
-      cell.batchDetails?.name || '-',
-      cell.subjectDetails?.credit || '-'
+    const bottomTableData = Object.values(uniqueClasses).map(item => [
+      item.subjectDetails?.code,
+      item.subjectDetails?.abbreviation,
+      item.subjectDetails?.name,
+      Array.from(item.batches).filter(Boolean).join(', ') || '-',
+      item.subjectDetails?.credit || '-'
     ]);
 
     autoTable(doc, {
@@ -181,7 +203,18 @@ export default function FacultyRoutine() {
       TIME_SLOTS.forEach(time => {
         const cell = routine[`${day}|${time}`];
         const cellText = cell ? (cell.subjectDetails?.abbreviation || cell.subjectDetails?.code) : "";
-        cells.push(new TableCell({ children: [new Paragraph({ text: cellText, alignment: AlignmentType.CENTER })], margins: cellPadding }));
+        const colorHex = cell?.subjectDetails?.color;
+        
+        let shadingProps = undefined;
+        if (exportWithColors && colorHex && cellText) {
+          shadingProps = { fill: colorHex.replace('#', ''), type: ShadingType.CLEAR, color: "auto" };
+        }
+        
+        cells.push(new TableCell({ 
+          children: [new Paragraph({ text: cellText, alignment: AlignmentType.CENTER })], 
+          margins: cellPadding,
+          shading: shadingProps
+        }));
       });
       tableRows.push(new TableRow({ children: cells }));
     });
@@ -189,7 +222,15 @@ export default function FacultyRoutine() {
     const uniqueClasses = {};
     Object.values(routine).forEach(cell => {
       if (cell && cell.subjectDetails && cell.batchDetails) {
-        uniqueClasses[`${cell.subjectDetails._id}-${cell.batchDetails._id}`] = cell;
+        const key = cell.subjectDetails._id;
+        if (!uniqueClasses[key]) {
+          uniqueClasses[key] = {
+            subjectDetails: cell.subjectDetails,
+            batches: new Set([cell.batchDetails?.name])
+          };
+        } else {
+          uniqueClasses[key].batches.add(cell.batchDetails?.name);
+        }
       }
     });
 
@@ -205,14 +246,14 @@ export default function FacultyRoutine() {
       })
     ];
 
-    Object.values(uniqueClasses).forEach(cell => {
+    Object.values(uniqueClasses).forEach(item => {
       bottomTableRows.push(new TableRow({
         children: [
-          new TableCell({ children: [new Paragraph({ text: cell.subjectDetails?.code || '', alignment: AlignmentType.CENTER })], margins: cellPadding }),
-          new TableCell({ children: [new Paragraph({ text: cell.subjectDetails?.abbreviation || '', alignment: AlignmentType.CENTER })], margins: cellPadding }),
-          new TableCell({ children: [new Paragraph({ text: cell.subjectDetails?.name || '', alignment: AlignmentType.CENTER })], margins: cellPadding }),
-          new TableCell({ children: [new Paragraph({ text: cell.batchDetails?.name || '-', alignment: AlignmentType.CENTER })], margins: cellPadding }),
-          new TableCell({ children: [new Paragraph({ text: String(cell.subjectDetails?.credit || '-'), alignment: AlignmentType.CENTER })], margins: cellPadding }),
+          new TableCell({ children: [new Paragraph({ text: item.subjectDetails?.code || '', alignment: AlignmentType.CENTER })], margins: cellPadding }),
+          new TableCell({ children: [new Paragraph({ text: item.subjectDetails?.abbreviation || '', alignment: AlignmentType.CENTER })], margins: cellPadding }),
+          new TableCell({ children: [new Paragraph({ text: item.subjectDetails?.name || '', alignment: AlignmentType.CENTER })], margins: cellPadding }),
+          new TableCell({ children: [new Paragraph({ text: Array.from(item.batches).filter(Boolean).join(', ') || '-', alignment: AlignmentType.CENTER })], margins: cellPadding }),
+          new TableCell({ children: [new Paragraph({ text: String(item.subjectDetails?.credit || '-'), alignment: AlignmentType.CENTER })], margins: cellPadding }),
         ]
       }));
     });
@@ -301,9 +342,13 @@ export default function FacultyRoutine() {
       <div className="page-header" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
         <h1 className="page-title">Faculty Timetable</h1>
         {selectedFaculty && (
-          <div className="flex gap-4">
-            <button className="btn btn-secondary" onClick={exportPDF}><FileText size={18} /> Export PDF</button>
-            <button className="btn btn-secondary" onClick={exportWord}><Download size={18} /> Export Word</button>
+          <div className="flex gap-2 items-center">
+            <label className="text-sm font-medium flex items-center gap-2 cursor-pointer mr-4">
+              <input type="checkbox" checked={exportWithColors} onChange={(e) => setExportWithColors(e.target.checked)} />
+              Export Colors
+            </label>
+            <button className="btn btn-secondary" onClick={exportPDF}><FileText size={18} /> PDF</button>
+            <button className="btn btn-secondary" onClick={exportWord}><Download size={18} /> Word</button>
           </div>
         )}
       </div>
@@ -337,11 +382,12 @@ export default function FacultyRoutine() {
                 const key = `${day}|${time}`;
                 const cellData = routine[key];
 
+                const color = cellData?.subjectDetails?.color || '#2B3A67';
                 return (
                   <div key={time} className="grid-cell" style={{ justifyContent: 'center' }}>
                     {cellData ? (
-                      <div className="routine-card" style={{ cursor: 'default', borderLeft: '3px solid var(--secondary)' }}>
-                        <div className="font-semibold text-white">{cellData.subjectDetails?.code}</div>
+                      <div className="routine-card" style={{ cursor: 'default', backgroundColor: `${color}20`, borderLeft: `4px solid ${color}`, borderColor: color }}>
+                        <div className="font-semibold" style={{ color: color }}>{cellData.subjectDetails?.code}</div>
                         <div className="text-xs text-muted">{cellData.batchDetails?.name}</div>
                         <div className="text-xs text-muted">Room: {cellData.room}</div>
                       </div>

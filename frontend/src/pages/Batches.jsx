@@ -6,6 +6,7 @@ export default function Batches() {
   const [batches, setBatches] = useState([]);
   const [name, setName] = useState('');
   const [semester, setSemester] = useState('');
+  const [room, setRoom] = useState('');
   const [editingId, setEditingId] = useState(null);
 
   useEffect(() => {
@@ -25,13 +26,14 @@ export default function Batches() {
     e.preventDefault();
     try {
       if (editingId) {
-        await api.put(`/batches/${editingId}`, { name, semester });
+        await api.put(`/batches/${editingId}`, { name, semester, room });
         setEditingId(null);
       } else {
-        await api.post('/batches', { name, semester });
+        await api.post('/batches', { name, semester, room });
       }
       setName('');
       setSemester('');
+      setRoom('');
       fetchBatches();
     } catch (err) {
       alert(editingId ? 'Error updating batch' : 'Error adding batch');
@@ -42,12 +44,14 @@ export default function Batches() {
     setEditingId(batch._id);
     setName(batch.name);
     setSemester(batch.semester);
+    setRoom(batch.room || '');
   };
 
   const cancelEdit = () => {
     setEditingId(null);
     setName('');
     setSemester('');
+    setRoom('');
   };
 
   const handleDelete = async (id) => {
@@ -79,6 +83,9 @@ export default function Batches() {
           <div className="form-group" style={{ marginBottom: 0, flex: 1 }}>
             <input type="number" placeholder="Semester" value={semester} onChange={e => setSemester(e.target.value)} required />
           </div>
+          <div className="form-group" style={{ marginBottom: 0, flex: 1 }}>
+            <input type="text" placeholder="Room No (e.g. Room 101)" value={room} onChange={e => setRoom(e.target.value)} />
+          </div>
           <button type="submit" className="btn btn-primary">
             {editingId ? 'Update Batch' : <><Plus size={18} /> Add Batch</>}
           </button>
@@ -92,6 +99,7 @@ export default function Batches() {
               <tr>
                 <th>Batch Name</th>
                 <th>Semester</th>
+                <th>Room No</th>
                 <th>Actions</th>
               </tr>
             </thead>
@@ -100,6 +108,7 @@ export default function Batches() {
                 <tr key={batch._id}>
                   <td>{batch.name}</td>
                   <td>{batch.semester}</td>
+                  <td>{batch.room || '-'}</td>
                   <td>
                     <div className="flex gap-2">
                       <button className="action-btn" onClick={() => startEdit(batch)} style={{ color: 'var(--text-muted)' }}><Pencil size={18} /></button>
